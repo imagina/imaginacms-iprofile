@@ -91,8 +91,10 @@ class AuthProfileController extends AuthController
       
         }
 
-        return view($tpl);
-    }
+    if (view()->exists($ttpl)) $tpl = $ttpl;
+    return view($tpl);
+
+  }
 
     /**
      * POST LOGIN
@@ -358,30 +360,36 @@ class AuthProfileController extends AuthController
           ->withSuccess(trans('user::messages.password reset'));
     }
 
-    /**
-     * GET SOCIAL
-     */
-    public function getSocialAuth($provider, Request $request)
-    {
-        try {
-            if (! setting('iprofile::registerUsersWithSocialNetworks')) {
-                throw new Exception('Users can\'t login with social networks', 401);
-            }
 
-            if (! empty($request->query('redirect'))) {
-                \Session::put('redirect', $request->query('redirect'));
-            }
+  /**
+   * GET SOCIAL
+   *
+   * @param
+   * @return
+   */
+  public function getSocialAuth($provider = null, Request $request)
+  {
+    try{
+      if(!setting("iprofile::registerUsersWithSocialNetworks")){
+        throw new Exception('Users can\'t login with social networks', 401);
+      }
 
-            if (! config("services.$provider")) {
-                throw new Exception("Error - Config Services {$provider} - Not defined", 404);
-            }
-        } catch (\Exception $e) {
-            $status = $e->getCode();
-            $response = ['errors' => $e->getMessage()];
-        }
+      if (!empty($request->query('redirect'))) {
+        \Session::put('redirect', $request->query('redirect'));
+      }
 
-        return Socialite::driver($provider)->redirect();
+      if (!config("services.$provider")) {
+        throw new Exception("Error - Config Services {$provider} - Not defined", 404);
+      }
+
+    }catch (\Exception $e) {
+      $status = $e->getCode();
+      $response = ["errors" => $e->getMessage()];
     }
+
+    return Socialite::driver($provider)->redirect();
+
+  }
 
     /**
      * GET SOCIAL
@@ -518,7 +526,56 @@ class AuthProfileController extends AuthController
                 return null;
             }
 
-            return $user;
-        }
+
+      return $user;
     }
+
+  }
+
+  /**
+   * GET LOGIN WITH EMAIL
+   *
+   * @param
+   * @return
+   */
+  public function getLoginWithEmail(Request $request, $token)
+  {
+    $data = $request->all();
+    $modelToken = Token::where('token', $token)->first();
+
+    // Returns a string if the URL has parameters or NULL if not
+    if($modelToken && isset($data["redirectTo"])) {
+      $urlRedirect = $data["redirectTo"];
+
+      if($modelToken->entity_type === 'Modules\User\Entities\Sentinel\User') {
+        $userId = $modelToken->entity_id;
+        $user = User::where('id', $userId)->first();
+
+        $validateToken = $user->validateToken($token);
+
+        if($validateToken) {
+          $login = \Auth::loginUsingId($userId);//Loged impersonator
+          $bearer = $login->createToken('Laravel Password Grant Client');
+
+          $redirectWithout = preg_replace('/#/', '', $urlRedirect, 1);
+          $query = parse_url($urlRedirect, PHP_URL_QUERY);
+          if(!$query) $query = parse_url($redirectWithout, PHP_URL_QUERY);
+
+          if ($query) {
+            $urlRedirect .= '&authbearer='.$bearer->accessToken;
+          } else {
+            $urlRedirect .= '?authbearer='.$bearer->accessToken;
+          }
+
+          $urlRedirect .= '&expiresatbearer='.$bearer->token->expires_at;
+
+          return redirect($urlRedirect);
+        }
+      }
+    }
+
+    return abort(404);
+
+  }
+
 }

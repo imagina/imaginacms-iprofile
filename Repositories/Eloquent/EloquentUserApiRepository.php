@@ -14,16 +14,15 @@ class EloquentUserApiRepository extends EloquentBaseRepository implements UserAp
         /*== initialize query ==*/
         $query = $this->model->query();
 
-        /*== RELATIONSHIPS ==*/
-        if (in_array('*', $params->include ?? [])) {//If Request all relationships
-            $query->with([]);
-        } else {//specific relationships
-            $includeDefault = ['fields', 'settings']; //Default relationships
-            if (isset($params->include)) {//merge relations with default relationships
-                $includeDefault = array_merge($includeDefault, $params->include ?? []);
-            }
-            $query->with($includeDefault); //Add Relationships to query
-        }
+    /*== RELATIONSHIPS ==*/
+    if (in_array('*', $params->include ?? [])) {//If Request all relationships
+      $query->with([]);
+    } else {//specific relationships
+      $includeDefault = ['fields', 'settings', "files"];//Default relationships
+      if (isset($params->include))//merge relations with default relationships
+        $includeDefault = array_merge($includeDefault, $params->include ?? []);
+      $query->with($includeDefault);//Add Relationships to query
+    }
 
         /*== FILTERS ==*/
         if (isset($params->filter)) {
@@ -63,14 +62,14 @@ class EloquentUserApiRepository extends EloquentBaseRepository implements UserAp
                 });
             }
 
-            //Filter by disabled users
-            if (isset($filter->status) && ((int) $filter->status == 0)) {
-                $query->whereNotIn('users.id', function ($query) {
-                    $query->select('activations.user_id')
-                      ->from('activations')
-                      ->where('activations.completed', 1);
-                });
-            }
+      //Filter by disabled users
+      if (isset($filter->status) && ((int)$filter->status == 0)) {
+        $query->whereNotIn('users.id', function ($query) use ($filter) {
+          $query->select('activations.user_id')
+            ->from('activations')
+            ->where('activations.completed', 1);
+        });
+      }
 
             //Filter by user ID
             if (isset($filter->userId) && count($filter->userId)) {
@@ -176,16 +175,15 @@ class EloquentUserApiRepository extends EloquentBaseRepository implements UserAp
         //Initialize query
         $query = $this->model->query();
 
-        /*== RELATIONSHIPS ==*/
-        if (isset($params->include) && in_array('*', $params->include)) {//If Request all relationships
-            $query->with([]);
-        } else {//Especific relationships
-            $includeDefault = []; //Default relationships
-            if (isset($params->include)) {//merge relations with default relationships
-                $includeDefault = array_merge($includeDefault, $params->include);
-            }
-            $query->with($includeDefault); //Add Relationships to query
-        }
+    /*== RELATIONSHIPS ==*/
+    if (isset($params->include) && in_array('*', $params->include)) {//If Request all relationships
+      $query->with([]);
+    } else {//Especific relationships
+      $includeDefault = ["files"];//Default relationships
+      if (isset($params->include))//merge relations with default relationships
+        $includeDefault = array_merge($includeDefault, $params->include);
+      $query->with($includeDefault);//Add Relationships to query
+    }
 
         /*== FILTER ==*/
         if (isset($params->filter)) {

@@ -4,46 +4,40 @@ namespace Modules\Iprofile\View\Components;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\View\Component;
+use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 
 class UserMenu extends Component
 {
-    public $view;
+  public $view;
+  public $user;
+  public $params;
+  public $showLabel;
+  public $moduleLinks;
+  public $moduleLinksWithoutSession;
+  public $id;
+  public $panel;
+  public $profileRoute;
+  public $openLoginInModal;
+  public $openRegisterInModal;
+  protected $authApiController;
+  public $label;
+  public $classUser;
+  public $styleUser;
 
-    public $user;
-
-    public $params;
-
-    public $showLabel;
-
-    public $moduleLinks;
-
-    public $moduleLinksWithoutSession;
-
-    public $id;
-
-    public $panel;
-
-    public $profileRoute;
-
-    public $openLoginInModal;
-
-    public $openRegisterInModal;
-
-    protected $authApiController;
-
-    public $label;
-
-    public function __construct($layout = 'user-menu-layout-1', $showLabel = false, $id = 'userMenuComponent',
+  public function __construct($layout = 'user-menu-layout-1', $showLabel = false, $id = "userMenuComponent",
                               $params = [], $openLoginInModal = true, $openRegisterInModal = false,
                               $onlyShowInTheDropdownHeader = true, $onlyShowInTheMenuOfTheIndexProfilePage = false,
-                              $label = null)
-    {
-        $this->view = 'iprofile::frontend.components.user-menu.layouts.'.(isset($layout) ? $layout : 'user-menu-layout-1').'.index';
+                              $label = null, $classUser = '', $styleUser = ''  )
+  {
 
-        $this->showLabel = $showLabel;
-        $this->label = $label ?? trans('iprofile::frontend.button.my_account');
-        $this->openLoginInModal = $openLoginInModal;
-        $this->openRegisterInModal = $openRegisterInModal;
+    $this->view = 'iprofile::frontend.components.user-menu.layouts.' . (isset($layout) ? $layout : 'user-menu-layout-1') . '.index';
+
+    $this->showLabel = $showLabel;
+    $this->label = $label ?? trans('iprofile::frontend.button.my_account');
+    $this->openLoginInModal = $openLoginInModal;
+    $this->openRegisterInModal = $openRegisterInModal;
+    $this->classUser = $classUser;
+    $this->styleUser = $styleUser;
 
         $this->authApiController = app("Modules\Iprofile\Http\Controllers\Api\AuthApiController");
         $modules = app('modules')->allEnabled();

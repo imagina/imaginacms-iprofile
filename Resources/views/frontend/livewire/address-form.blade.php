@@ -32,23 +32,29 @@
               
               <div class="form-group row pt-2">
                 <div class="col pr-1">
-                  <label for="payment_firstname">{{ trans('iprofile::addresses.form.firstName') }}
-                    <span class="text-danger">*</span> </label>
+                  <label for="payment_firstname">
+                    @if(!$hideLastName) {{trans('iprofile::addresses.form.firstName')}} @else {{trans('iprofile::addresses.form.receiver')}} @endif
+                    <span class="text-danger">*</span>
+                  </label>
                   <input class="form-control" type="text"
                          id="paymentFirstname"
                          wire:model.defer="address.first_name">
                   {!! $errors->first("address.first_name", '<span class="help-block text-danger">:message</span>') !!}
                 
                 </div>
-                <div class="col pl-1">
-                  <label for="payment_lastname">{{ trans('iprofile::addresses.form.lastName') }}
-                    <span class="text-danger">*</span>
-                  </label>
-                  <input class="form-control" type="text"
-                         id="paymentLastname"
-                         wire:model.defer="address.last_name">
-                  {!! $errors->first("address.last_name", '<span class="help-block text-danger">:message</span>') !!}
-                </div>
+
+                {{-- LAST NAME --}}
+                @if(!$hideLastName)
+                  <div class="col pl-1">
+                    <label for="payment_lastname">{{ trans('iprofile::addresses.form.lastName') }}
+                      <span class="text-danger">*</span>
+                    </label>
+                    <input class="form-control" type="text"
+                          id="paymentLastname"
+                          wire:model.defer="address.last_name">
+                    {!! $errors->first("address.last_name", '<span class="help-block text-danger">:message</span>') !!}
+                  </div>
+                @endif
               
               </div>
               
@@ -60,6 +66,12 @@
                        id="paymentAddress1"
                        wire:model.defer="address.address_1">
                 {!! $errors->first("address.address_1", '<span class="help-block text-danger">:message</span>') !!}
+
+                {{-- ADDRESS WITH AUTOCOMPLETE --}}
+                @if($showAddressmap)
+                  @include('iprofile::frontend.livewire.partials.address-map')
+                @endif
+
               </div>
               <div class="form-group">
                 <label for="payment_telephone">{{ trans('iprofile::addresses.form.telephone') }}
@@ -71,103 +83,107 @@
                 {!! $errors->first("address.telephone", '<span class="help-block text-danger">:message</span>') !!}
               </div>
               
-              <div class="form-group">
-                <label for="payment_country">{{ trans('iprofile::addresses.form.country') }}
-                  <span class="text-danger">*</span>
-                </label>
-                <select id="paymentCountry"
-                        class="form-control"
-                        wire:model="address.country">
-                  <option value="">{{ trans('iprofile::addresses.form.select_country') }}</option>
-                  @foreach($countries as $country)
-                    <option value="{{$country->iso_2}}">{{ $country->name }}</option>
-                  @endforeach
-                </select>
-                {!! $errors->first("address.country", '<span class="help-block text-danger">:message</span>') !!}
-              </div>
-              
-              
-              <div class="form-group">
-                
-                <label for="paymentState">{{ trans('iprofile::addresses.form.state') }}
-                  <span class="text-danger">*</span>
-                </label>
-                <select id="paymentState"
-                        class="form-control"
-                        wire:model="address.state">
-                  
-                  <option value="">{{ trans('iprofile::addresses.form.select_province') }}</option>
-                  
-                  @foreach($provinces as $province)
-                    <option value="{{$province->iso_2}}">{{ $province->name }}</option>
-                  @endforeach
-                </select>
-                
-                {!! $errors->first("address.state", '<span class="help-block text-danger">:message</span>') !!}
-              </div>
-              
-              @if(!isset($address["options"]["customCity"]) || !$address["options"]["customCity"])
+              {{-- VALIDATION NOT SHOW --}}
+              @if(!$showAddressmap)
+                {{--COUNTRY--}}
                 <div class="form-group">
-                  
-                  <label for="paymentCity">{{ trans('iprofile::addresses.form.city') }}
+                  <label for="payment_country">{{ trans('iprofile::addresses.form.country') }}
                     <span class="text-danger">*</span>
                   </label>
-                  <select id="paymentCity"
+                  <select id="paymentCountry"
                           class="form-control"
-                          wire:model.defer="address.city_id">
-                    <option value="">{{ trans('iprofile::addresses.form.select_city') }}</option>
-                    
-                    
-                    @foreach($cities as $city)
-                      <option value="{{$city->id}}">{{ $city->name }}</option>
+                          wire:model="address.country">
+                    <option value="">{{ trans('iprofile::addresses.form.select_country') }}</option>
+                    @foreach($countries as $country)
+                      <option value="{{$country->iso_2}}">{{ $country->name }}</option>
                     @endforeach
                   </select>
-                  {!! $errors->first("address.state", '<span class="help-block text-danger">:message</span>') !!}
-                  
-                  <div class="form-check">
-                    
-                    <label class="form-check-label">
-                      <input id="cantFindcity"
-                             wire:model="address.options.customCity"
-                             type="checkbox"
-                      />
-                      {{ trans('iprofile::addresses.form.cantFindMyCity') }}
-                    </label>
-                  </div>
+                  {!! $errors->first("address.country", '<span class="help-block text-danger">:message</span>') !!}
                 </div>
-              @endif
               
-              
-              
-              @if(isset($address["options"]["customCity"]) && $address["options"]["customCity"])
-                
+                {{--STATE--}}
                 <div class="form-group">
-                  <label for="customCity">{{ trans('iprofile::addresses.form.city') }}
+
+                  <label for="paymentState">{{ trans('iprofile::addresses.form.state') }}
                     <span class="text-danger">*</span>
                   </label>
-                  <input class="form-control" type="text"
-                         id="customCity" placeholder="{{trans("iprofile::addresses.form.customCityPlaceholder")}}"
-                         wire:model.defer="address.city"/>
-                  {!! $errors->first("address.city", '<span class="help-block text-danger">:message</span>') !!}
-                  
-                  <div class="form-check">
-                    
-                    <label class="form-check-label">
-                      <input id="cantFindcity"
-                             wire:model="address.options.customCity"
-                             type="checkbox"
-                      />
-                      {{ trans('iprofile::addresses.form.cantFindMyCity') }}
+                  <select id="paymentState"
+                          class="form-control"
+                          wire:model="address.state">
+
+                    <option value="">{{ trans('iprofile::addresses.form.select_province') }}</option>
+
+                    @foreach($provinces as $province)
+                      <option value="{{$province->iso_2}}">{{ $province->name }}</option>
+                    @endforeach
+                  </select>
+
+                  {!! $errors->first("address.state", '<span class="help-block text-danger">:message</span>') !!}
+                </div>
+              
+                {{--CUSTOM CITY--}}
+                @if(!isset($address["options"]["customCity"]) || !$address["options"]["customCity"])
+                  <div class="form-group">
+
+                    <label for="paymentCity">{{ trans('iprofile::addresses.form.city') }}
+                      <span class="text-danger">*</span>
                     </label>
+                    <select id="paymentCity"
+                            class="form-control"
+                            wire:model.defer="address.city_id">
+                      <option value="">{{ trans('iprofile::addresses.form.select_city') }}</option>
+
+
+                      @foreach($cities as $city)
+                        <option value="{{$city->id}}">{{ $city->name }}</option>
+                      @endforeach
+                    </select>
+                    {!! $errors->first("address.state", '<span class="help-block text-danger">:message</span>') !!}
+
+                    <div class="form-check">
+
+                      <label class="form-check-label">
+                        <input id="cantFindcity"
+                              wire:model="address.options.customCity"
+                              type="checkbox"
+                        />
+                        {{ trans('iprofile::addresses.form.cantFindMyCity') }}
+                      </label>
+                    </div>
                   </div>
-                </div>
-                <div class="form-group">
-                  <label for="zipCode">{{ trans('iprofile::addresses.form.zipCode') }}</label>
-                  <input class="form-control" type="text"
-                         id="zipCode"
-                         wire:model.defer="address.zip_code"/>
-                  {!! $errors->first("address.zip_code", '<span class="help-block text-danger">:message</span>') !!}
-                </div>
+                @endif
+
+                @if(isset($address["options"]["customCity"]) && $address["options"]["customCity"])
+
+                  <div class="form-group">
+                    <label for="customCity">{{ trans('iprofile::addresses.form.city') }}
+                      <span class="text-danger">*</span>
+                    </label>
+                    <input class="form-control" type="text"
+                          id="customCity" placeholder="{{trans("iprofile::addresses.form.customCityPlaceholder")}}"
+                          wire:model.defer="address.city"/>
+                    {!! $errors->first("address.city", '<span class="help-block text-danger">:message</span>') !!}
+
+                    <div class="form-check">
+
+                      <label class="form-check-label">
+                        <input id="cantFindcity"
+                              wire:model="address.options.customCity"
+                              type="checkbox"
+                        />
+                        {{ trans('iprofile::addresses.form.cantFindMyCity') }}
+                      </label>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="zipCode">{{ trans('iprofile::addresses.form.zipCode') }}</label>
+                    <input class="form-control" type="text"
+                          id="zipCode"
+                          wire:model.defer="address.zip_code"/>
+                    {!! $errors->first("address.zip_code", '<span class="help-block text-danger">:message</span>') !!}
+                  </div>
+                @endif
+
               @endif
               
               <!-- Extra info added by default for all addresses | not required-->
@@ -180,7 +196,7 @@
               
               @foreach($addressesExtraFields as $extraField)
                 {{-- if is active--}}
-                @if($extraField->active)
+                @if($extraField->active ?? false)
                   
                   {{-- form group--}}
                   <div class="form-group">
@@ -300,10 +316,18 @@
                 </label>
               </div>
               
-              <div class="form-group text-center">
+              <div class="form-group text-center mt-2">
                 <button @if(is_null($livewireEvent)) type="submit" @else wire:click.prevent="addressEmit" @endif
                 class="btn btn-primary" name="button"> {{trans('iprofile::addresses.button.add_address')}}
                 </button>
+
+
+                @if($showCancelBtn && $userAddresses->count()>0)
+                  <button onClick="window.livewire.emit('cancelledNewAddress')"
+                  class="btn btn-primary" name="button"> {{trans('iprofile::addresses.button.cancel')}}
+                  </button>
+                @endif
+
               </div>
             
             </form>

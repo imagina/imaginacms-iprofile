@@ -3,7 +3,7 @@
   <!--- LOGIN -->
     @if($user)
       
-        <ul class="list-sidebar">
+        <ul class="list-sidebar {{$classUser}}">
           <li class="nav-item">
             <a  href="{{\URL::route(\LaravelLocalization::getCurrentLocale() . '.iprofile.account.index')}}">
               <i class="fa fa-user mr-2"></i> <span class="nav-label">{{trans('iprofile::frontend.title.profile')}} </span>
@@ -28,7 +28,7 @@
 
   @else
 
-        <ul class="list-sidebar bg-default">
+        <ul class="list-sidebar bg-default {{$classUser}}">
           @foreach($moduleLinksWithoutSession as $link)
             <li class="nav-item">
             <a  href="{{$link['url']}}" {{isset($link["dispatchModal"]) ? "data-toggle=modal data-target=".$link['dispatchModal'] : ''}}>
@@ -80,16 +80,14 @@
   @endif
   
     @section('scripts')
-        <script type="text/javascript">
-          $("#accMenuDrop").hover(function(){
-            $(this).addClass("show");
-            $('#drop-menu').addClass("show");
-          }, function(){
-            $(this).removeClass("show");
-            $('#drop-menu').removeClass("show");
-          });
-        </script>
-        @parent
+      @if(!empty($styleUser))
+      <style>
+        #{{$id}} .list-sidebar {
+          {!!$styleUser!!}
+        }
+      </style>
+      @endif
+      @parent
     @endsection
 
 </div>

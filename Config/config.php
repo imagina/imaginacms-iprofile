@@ -130,19 +130,21 @@ return [
 | Define all the exportable available
 |--------------------------------------------------------------------------
 */
-    'exportable' => [
-        'user' => [
-            'moduleName' => 'Iprofile',
-            'fileName' => 'Users',
-            'fields' => ['id', 'first_name', 'last_name', 'email', 'last_login', 'created_at', 'updated_at'],
-            'headings' => ['id', 'Nombre', 'Apellido', 'Email', 'Fecha Ultima Sesión', 'Fecha de Creación', 'Fecha Ultima Actualización'],
-            'repositoryName' => 'UserApiRepository',
-        ],
-    ],
-    /*Translate keys of each entity. Based on the permission string*/
-    'documentation' => [
-        'user' => 'iprofile::cms.documentation.user',
-        'departments' => 'iprofile::cms.documentation.departments',
-        'role' => 'iprofile::cms.documentation.role',
-    ],
+  'exportable' => [
+    "user" => [
+      'moduleName' => "Iprofile",
+      'fileName' => "Users",
+      'fields' => ['id', 'first_name', 'last_name', 'email', 'last_login', 'created_at', 'updated_at'],
+      'headings' => ['id', 'Nombre', 'Apellido', 'Email', 'Fecha Ultima Sesión', 'Fecha de Creación', 'Fecha Ultima Actualización'],
+      'repositoryName' => "UserApiRepository"
+    ]
+  ],
+  /*Translate keys of each entity. Based on the permission string*/
+  'documentation' => [
+    'user' => "iprofile::cms.documentation.user",
+    'departments' => "iprofile::cms.documentation.departments",
+    'role' => "iprofile::cms.documentation.role",
+  ],
+  /*Option that you can use withEmail | withPassword */
+  'authType' => 'withPassword'
 ];

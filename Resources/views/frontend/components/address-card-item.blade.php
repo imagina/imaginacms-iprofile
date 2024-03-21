@@ -19,7 +19,7 @@
       <div>
 
         @foreach($addressesExtraFields as $extraField)
-          @if($extraField->active)
+          @if($extraField->active ?? false)
             @if($extraField->type == "documentType")
               @if(isset($address->options) && isset($address->options->documentType))
                 <p class="card-text m-0"><b>{{trans("iprofile::addresses.form.identification")}}

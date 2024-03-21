@@ -98,13 +98,20 @@ return [
         'privacy_policy_url' => '/politica-de-privacidad',
     ],
 
-    'messages' => [
-        'account created' => 'Cuenta creada! ya puedes iniciar sesión',
-        'providerEmailEmpty' => 'El correo electrónico está vacío, compruebe los permisos de su proveedor (:providerName) para obtener el campo de correo electrónico.',
-        'resetPasswordModal' => 'Hola, debes cambiar la contraseña',
-        'password updated' => 'Contraseña actualizada!',
-        'You already used this password' => 'Ya utilizaste esta contraseña',
-        'You must change the password' => 'Debes cambiar la contraseña ya que se encuentra vencida',
-    ],
+  'messages' => [
+    'account created' => 'Cuenta creada! ya puedes iniciar sesión',
+    "providerEmailEmpty" => "El correo electrónico está vacío, compruebe los permisos de su proveedor (:providerName) para obtener el campo de correo electrónico.",
+    "resetPasswordModal" => 'Hola, debes cambiar la contraseña',
+    "password updated" => 'Contraseña actualizada!',
+    "You already used this password" => "Ya utilizaste esta contraseña",
+    "You must change the password" => "Debes cambiar la contraseña ya que se encuentra vencida"
+  ],
+
+  'email' => [
+    'readyToProceed' => '¡Listo para continuar!',
+    'loginLink' => 'O puedes copiar el siguiente enlace: <br/> :link',
+    'proceedToLogin' => 'Inicia sesión ahora',
+    'clickLogin' => 'Puedes iniciar sesión haciendo clic en el botón:'
+  ]
 
 ];

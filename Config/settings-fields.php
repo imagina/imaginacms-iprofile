@@ -499,53 +499,78 @@ return [
         ],
     ],
 
-    //==== Tenant settings
-    'tenantWithCentralData' => [
-        'value' => [],
-        'name' => 'iprofile::tenantWithCentralData',
-        'onlySuperAdmin' => true,
-        'groupName' => 'tenantConfiguration',
-        'groupTitle' => 'iprofile::common.settings.tenant.group',
-        'type' => 'select',
-        'columns' => 'col-6',
-        'props' => [
-            'label' => 'iprofile::common.settings.tenant.tenantWithCentralData',
-            'useInput' => false,
-            'useChips' => true,
-            'multiple' => true,
-            'hideDropdownIcon' => true,
-            'newValueMode' => 'add-unique',
-            'options' => [
-                ['label' => 'iprofile::common.settings.tenant.entities.roles', 'value' => 'roles'],
-                ['label' => 'iprofile::common.settings.tenant.entities.settings', 'value' => 'settings'],
-            ],
-        ],
+  //==== Tenant settings
+  'tenantWithCentralData' => [
+    'value' => [],
+    'name' => 'iprofile::tenantWithCentralData',
+    "onlySuperAdmin" => true,
+    'groupName' => 'tenantConfiguration',
+    'groupTitle' => 'iprofile::common.settings.tenant.group',
+    'type' => 'select',
+    'columns' => 'col-6',
+    'props' => [
+      'label' => 'iprofile::common.settings.tenant.tenantWithCentralData',
+      'useInput' => false,
+      'useChips' => true,
+      'multiple' => true,
+      'hideDropdownIcon' => true,
+      'newValueMode' => 'add-unique',
+      'options' => [
+        ['label' => 'iprofile::common.settings.tenant.entities.roles', 'value' => 'roles'],
+        ['label' => 'iprofile::common.settings.tenant.entities.settings', 'value' => 'settings'],
+      ]
+    ]
+  ],
+  //Allow local login
+  'allowLocalLogin' => [
+    "onlySuperAdmin" => true,
+    'name' => 'iprofile::allowLocalLogin',
+    'value' => "1",
+    'type' => 'checkbox',
+    'props' => [
+      'trueValue' => "1",
+      'falseValue' => "0",
+      'label' => 'iprofile::settings.allowLocalLogin'
     ],
-    //Allow local login
-    'allowLocalLogin' => [
-        'onlySuperAdmin' => true,
-        'name' => 'iprofile::allowLocalLogin',
-        'value' => '1',
-        'type' => 'checkbox',
-        'props' => [
-            'trueValue' => '1',
-            'falseValue' => '0',
-            'label' => 'iprofile::settings.allowLocalLogin',
-        ],
+  ],
+  'customLogin' => [
+    'name' => 'iprofile::customLogin',
+    'value' => ['email'],
+    'type' => 'select',
+    'props' => [
+      'label' => 'iprofile::settings.labelCustomLogin',
+      'multiple' => true,
+      'useChips' => true,
+      'hideDropdownIcon' => true,
+      'options' => [
+        ['label' => 'iprofile::settings.optionMailCustomLogin', 'value' => 'email'],
+        ['label' => 'iprofile::settings.optionUserNameCustomLogin', 'value' => 'user_name']
+      ]
     ],
-    'customLogin' => [
-        'name' => 'iprofile::customLogin',
-        'value' => ['email'],
-        'type' => 'select',
-        'props' => [
-            'label' => 'iprofile::settings.labelCustomLogin',
-            'multiple' => true,
-            'useChips' => true,
-            'hideDropdownIcon' => true,
-            'options' => [
-                ['label' => 'iprofile::settings.optionMailCustomLogin', 'value' => 'email'],
-                ['label' => 'iprofile::settings.optionUserNameCustomLogin', 'value' => 'user_name'],
-            ],
-        ],
+  ],
+  //Address Autocomplete
+  'addressAutocomplete' => [
+    "onlySuperAdmin" => true,
+    'name' => 'iprofile::addressAutocomplete',
+    'value' => "0",
+    'type' => 'checkbox',
+    'props' => [
+      'trueValue' => "1",
+      'falseValue' => "0",
+      'label' => 'iprofile::settings.addressAutocomplete'
     ],
+  ],
+  //Hide lastname
+  'hideLastNameInAddress' => [
+    "onlySuperAdmin" => true,
+    'name' => 'iprofile::hideLastNameInAddress',
+    'value' => "1",
+    'type' => 'checkbox',
+    'props' => [
+      'trueValue' => "1",
+      'falseValue' => "0",
+      'label' => 'iprofile::settings.hideLastNameInAddress'
+    ],
+  ],
+
 ];

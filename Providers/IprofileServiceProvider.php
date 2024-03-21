@@ -6,13 +6,16 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
+use Modules\Core\Traits\CanPublishConfiguration;
 use Modules\Core\Events\BuildingSidebar;
 use Modules\Core\Events\LoadingBackendTranslations;
-use Modules\Core\Traits\CanPublishConfiguration;
 use Modules\Iprofile\Events\Handlers\RegisterIprofileSidebar;
+use Cartalyst\Sentinel\Laravel\Facades\Sentinel as SentinelCartalyst;
 use Modules\Iprofile\Http\Middleware\AuthCan;
-use Modules\Iprofile\Http\Middleware\OptionalAuth;
 use Modules\Iprofile\Http\Middleware\SettingMiddleware;
+use Modules\Iprofile\Http\Middleware\OptionalAuth;
+use Socialite;
+use Modules\Iprofile\Services\SocialiteGoogleJWTProvider;
 
 class IprofileServiceProvider extends ServiceProvider
 {
@@ -47,22 +50,29 @@ class IprofileServiceProvider extends ServiceProvider
         });
     }
 
-    public function boot()
-    {
-        $this->registerMiddleware();
-        $this->publishConfig('iprofile', 'config');
-        $this->mergeConfigFrom($this->getModuleConfigFilePath('iprofile', 'settings'), 'asgard.iprofile.settings');
-        $this->mergeConfigFrom($this->getModuleConfigFilePath('iprofile', 'settings-fields'), 'asgard.iprofile.settings-fields');
-        $this->mergeConfigFrom($this->getModuleConfigFilePath('iprofile', 'permissions'), 'asgard.iprofile.permissions');
-        $this->mergeConfigFrom($this->getModuleConfigFilePath('iprofile', 'cmsPages'), 'asgard.iprofile.cmsPages');
-        $this->mergeConfigFrom($this->getModuleConfigFilePath('iprofile', 'cmsSidebar'), 'asgard.iprofile.cmsSidebar');
-        $this->mergeConfigFrom($this->getModuleConfigFilePath('iprofile', 'gamification'), 'asgard.iprofile.gamification');
+  public function boot()
+  {
+    $this->registerMiddleware();
+    $this->publishConfig('iprofile', 'config');
+    $this->mergeConfigFrom($this->getModuleConfigFilePath('iprofile', 'settings'), "asgard.iprofile.settings");
+    $this->mergeConfigFrom($this->getModuleConfigFilePath('iprofile', 'settings-fields'), "asgard.iprofile.settings-fields");
+    $this->mergeConfigFrom($this->getModuleConfigFilePath('iprofile', 'permissions'), "asgard.iprofile.permissions");
+    $this->mergeConfigFrom($this->getModuleConfigFilePath('iprofile', 'cmsPages'), "asgard.iprofile.cmsPages");
+    $this->mergeConfigFrom($this->getModuleConfigFilePath('iprofile', 'cmsSidebar'), "asgard.iprofile.cmsSidebar");
+    $this->mergeConfigFrom($this->getModuleConfigFilePath('iprofile', 'gamification'), "asgard.iprofile.gamification");
+    $this->mergeConfigFrom($this->getModuleConfigFilePath('iprofile', 'blocks'), "asgard.iprofile.blocks");
 
-        $this->publishConfig('iprofile', 'crud-fields');
-        //$this->loadMigrationsFrom(__DIR__ . '/../Database/Migrations');
-        $this->registerComponents();
-        $this->registerComponentsLivewire();
-    }
+    $this->publishConfig('iprofile', 'crud-fields');
+    //$this->loadMigrationsFrom(__DIR__ . '/../Database/Migrations');
+    $this->registerComponents();
+    $this->registerComponentsLivewire();
+
+    //Include custom provider for Socialite
+    Socialite::extend('google-jwt', function ($app) {
+      $config = $app['config']['services.google'];
+      return new SocialiteGoogleJWTProvider($app['request'], $config['client_id'], $config['client_secret'], $config['redirect']);
+    });
+  }
 
     /**
      * Get the services provided by the provider.
@@ -168,11 +178,13 @@ class IprofileServiceProvider extends ServiceProvider
         Blade::componentNamespace("Modules\Iprofile\View\Components", 'iprofile');
     }
 
-    /**
-     * Register components Livewire
-     */
-    private function registerComponentsLivewire()
-    {
-        Livewire::component('iprofile::address-form', \Modules\Iprofile\Http\Livewire\AddressForm::class);
-    }
+  /**
+   * Register components Livewire
+   */
+  private function registerComponentsLivewire()
+  {
+    Livewire::component('iprofile::address-form', \Modules\Iprofile\Http\Livewire\AddressForm::class);
+    Livewire::component('iprofile::address-list', \Modules\Iprofile\Http\Livewire\AddressList::class);
+  }
+
 }

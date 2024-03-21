@@ -7,73 +7,83 @@ use Modules\Iprofile\Entities\Address;
 
 class AddressForm extends Component
 {
-    public $embedded;
 
-    public $route;
 
-    public $type;
+  public $embedded;
+  public $route;
+  public $type;
+  public $countries;
+  public $provinces;
+  public $cities;
+  public $address;
+  public $user;
+  public $openInModal;
+  public $withButtonSubmit;
+  public $livewireEvent;
+  public $shopAsGuest;
+  public $addressGuest;
+  public $log;
+  public $showAddressmap;
+  public $lat;
+  public $lng;
+  public $insideModal;
+  public $showCancelBtn;
+  public $userAddresses;
+  public $hideLastName;
 
-    public $countries;
+  protected $addressesExtraFields;
+  protected $rules;
+  protected $listeners = ['addressEmit','updateMarkerInMap','updateDataFromExternal'];
 
-    public $provinces;
+  /**
+   * Create a new component instance.
+   *
+   * @return void
+   */
+  public function mount($embedded = false, $route = false, $type = null, $openInModal = false,
+                        $withButtonSubmit = true, $livewireEvent = null, $addressGuest = [], $insideModal = false, $showCancelBtn = false,$userAddresses = null)
+  {
+    $this->log = "Iprofile::Livewire|AddressForm|";
+    $this->embedded = $embedded;
+    $this->openInModal = $openInModal;
+    $this->route = $route;
+    $this->type = $type;
+    $this->withButtonSubmit = $withButtonSubmit;
+    $this->livewireEvent = $livewireEvent;
+    $this->addressGuest = $addressGuest;
+    $this->shopAsGuest = false;
+    $this->addressesExtraFields = json_decode(setting('iprofile::userAddressesExtraFields', null, "[]"));
+    $this->hideLastName = setting('iprofile::hideLastNameInAddress', null, true);
 
-    public $cities;
+    $this->initUser();
+    $this->initAddress();
+    $this->initCountries();
+    $this->initProvinces();
+    $this->initCities();
 
-    public $address;
+    $this->showAddressmap = (setting('iprofile::addressAutocomplete') && setting('isite::api-maps')) ? true : false;
+    $this->insideModal = $insideModal;
+    $this->showCancelBtn = $showCancelBtn;
+    $this->userAddresses = $userAddresses;
 
-    public $user;
 
-    public $openInModal;
+  }
 
-    public $withButtonSubmit;
+  public function addressEmit()
+  {
+    \Log::info($this->log.'addressEmit');
 
-    public $livewireEvent;
+    try {
+      $this->validate($this->setRules(), $this->setMessages());
+      $this->initCities();
 
-    public $shopAsGuest;
+      //validate if the address doesnt have a custom City to get the city name from the DB
+      $this->validateCity();
 
-    public $addressGuest;
-
-    protected $addressesExtraFields;
-
-    protected $rules;
-
-    protected $listeners = ['addressEmit'];
-
-    /**
-     * Create a new component instance.
-     */
-    public function mount($embedded = false, $route = false, $type = null, $openInModal = false,
-                        $withButtonSubmit = true, $livewireEvent = null, $addressGuest = [])
-    {
-        $this->embedded = $embedded;
-        $this->openInModal = $openInModal;
-        $this->route = $route;
-        $this->type = $type;
-        $this->withButtonSubmit = $withButtonSubmit;
-        $this->livewireEvent = $livewireEvent;
-        $this->addressGuest = $addressGuest;
-        $this->shopAsGuest = false;
-        $this->addressesExtraFields = json_decode(setting('iprofile::userAddressesExtraFields', null, '[]'));
-        $this->initUser();
-        $this->initAddress();
-        $this->initCountries();
-        $this->initProvinces();
-        $this->initCities();
-    }
-
-    public function addressEmit()
-    {
-        try {
-            $this->validate($this->setRules(), $this->setMessages());
-            $this->initCities();
-
-            //validate if the address doesnt have a custom City to get the city name from the DB
-            $this->validateCity();
-
-            $this->emit($this->livewireEvent, $this->address);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            // Do your thing and use $validator here
-            $validator = $e->validator;
+      $this->emit($this->livewireEvent, $this->address);
+    }catch (\Illuminate\Validation\ValidationException $e) {
+      // Do your thing and use $validator here
+      $validator = $e->validator;
 
             $this->alert('warning', trans('iprofile::addresses.validation.alerts.invalid_data'), config('asgard.isite.config.livewireAlerts'));
 
@@ -126,8 +136,9 @@ class AddressForm extends Component
         }
     }
 
-private function validateCity()
-{
+private function validateCity(){
+
+  if(!$this->showAddressmap){
     //validate if the address doesnt have a custom City to get the city name from the DB
     if (! isset($this->address['options']['customCity']) || ! $this->address['options']['customCity']) {
         $city = $this->cities->where('id', $this->address['city_id'])->first();
@@ -136,6 +147,7 @@ private function validateCity()
     } else {
         $this->address['city_id'] = null;
     }
+  }
 }
 
     private function initUser()
@@ -148,56 +160,67 @@ private function validateCity()
         $this->rules = $this->setRules();
     }
 
-    private function setRules()
-    {
-        $this->addressesExtraFields = json_decode(setting('iprofile::userAddressesExtraFields', null, '[]'));
-        $extraFieldRules = [];
-        foreach ($this->addressesExtraFields as $extraField) {
-            $rule = '';
-            switch ($extraField->type) {
-                case 'number':
-                    $rule = 'numeric';
-                    break;
-                case 'text':
-                    $rule = 'string';
-                    break;
-                case 'documentType':
-                    $rule = 'string';
-                    $extraFieldRules = array_merge($extraFieldRules, ['address.options.documentNumber' => $rule.($extraField->required ? '|required|min:6|max:10' : '')]);
+  /**
+   *
+   */
+  private function setRules()
+  {
+    $this->addressesExtraFields = json_decode(setting('iprofile::userAddressesExtraFields', null, "[]"));
+    $extraFieldRules = [];
+    if(is_array($this->addressesExtraFields)){
+      foreach ($this->addressesExtraFields as $extraField) {
+        $rule = "";
+        switch ($extraField->type) {
+          case 'number':
+            $rule = "numeric";
+            break;
+          case 'text':
+            $rule = "string";
+            break;
+          case 'documentType':
+            $rule = "string";
+            $extraFieldRules = array_merge($extraFieldRules, ["address.options.documentNumber" => $rule . ($extraField->required ? "|required|min:6|max:10" : "")]);
 
-                    break;
-                case 'textarea':
-                    $rule = 'string|max:180';
-                    break;
-            }
-            if ($extraField->required) {
-                $rule .= '|required';
-            }
-            if ($extraField->active) {
-                $extraFieldRules = array_merge($extraFieldRules, ['address.options.'.$extraField->field => $rule]);
-            }
+            break;
+          case 'textarea':
+            $rule = "string|max:180";
+            break;
         }
-
-        //custom validation for City: could be city from DB or custom city from the user
-        if (isset($this->address['options']['customCity']) && $this->address['options']['customCity']) {
-            $cityRule = [
-                'address.city' => 'required|string',
-                'address.zip_code' => 'required|string',
-            ];
-        } else {
-            $cityRule = ['address.city_id' => 'required|integer'];
+        if ($extraField->required) {
+          $rule .= "|required";
         }
-
-        return array_merge([
-            'address.first_name' => 'required|string|min:3',
-            'address.last_name' => 'required|string|min:3',
-            'address.country' => 'required|string',
-            'address.telephone' => 'required|min:5|max:10',
-            'address.state' => 'required|string',
-            'address.default' => 'boolean',
-            'address.address_1' => 'required|string|min:10',
-            'address.type' => 'string'], $extraFieldRules, $cityRule);
+        if ($extraField->active) {
+          $extraFieldRules = array_merge($extraFieldRules, ["address.options." . $extraField->field => $rule]);
+        }
+      }
     }
+
+    //custom validation for City: could be city from DB or custom city from the user
+    if(isset($this->address["options"]["customCity"]) && $this->address["options"]["customCity"])
+      $cityRule = [
+        'address.city' => 'required|string',
+        'address.zip_code' => 'required|string',
+      ];
+    else
+      $cityRule = ['address.city_id' => 'required|integer'];
+
+    //Validation LastName Optional
+    if(!$this->hideLastName){
+      $lastNameRule = ['address.last_name' => 'string|min:3'];
+    }else{
+      $lastNameRule = [];
+    }
+
+    return array_merge([
+      'address.first_name' => 'required|string|min:3',
+      'address.country' => 'required|string',
+      'address.telephone' => 'required|min:5|max:10',
+      'address.state' => 'required|string',
+      'address.default' => 'boolean',
+      'address.address_1' => 'required|string|min:10',
+      'address.type' => 'string'], $extraFieldRules, $cityRule, $lastNameRule);
+
+  }
 
     private function setMessages()
     {
@@ -223,38 +246,52 @@ private function validateCity()
         ];
     }
 
-    private function initAddress()
-    {
-        $this->addressesExtraFields = json_decode(setting('iprofile::userAddressesExtraFields', null, '[]'));
-        $options = [];
-        foreach ($this->addressesExtraFields as $extraField) {
-            if ($extraField->active) {
-                if ($extraField->field == 'documentType') {
-                    $options['documentNumber'] = '';
-                }
-                $options[$extraField->field] = '';
-            }
+  private function initAddress()
+  {
+    $this->addressesExtraFields = json_decode(setting('iprofile::userAddressesExtraFields', null, "[]"));
+    $options = [];
+    foreach ($this->addressesExtraFields as $extraField) {
+      if ($extraField->active ?? false) {
+        if ($extraField->field == "documentType") {
+          $options["documentNumber"] = "";
         }
-        $options['extraInfo'] = '';
-        $options['customCity'] = false;
-        $this->address = [
-            'first_name' => $this->addressGuest['first_name'] ?? '',
-            'last_name' => $this->addressGuest['last_name'] ?? '',
-            'address_1' => $this->addressGuest['address_1'] ?? '',
-            'telephone' => $this->addressGuest['telephone'] ?? '',
-            'country' => $this->addressGuest['country'] ?? '',
-            'country_id' => $this->addressGuest['country_id'] ?? '',
-            'state_id' => $this->addressGuest['state_id'] ?? '',
-            'state' => $this->addressGuest['state'] ?? '',
-            'city' => $this->addressGuest['city'] ?? '',
-            'city_id' => $this->addressGuest['city_id'] ?? '',
-            'zip_code' => $this->addressGuest['zip_code'] ?? '',
-            'default' => $this->addressGuest['default'] ?? false,
-            'user_id' => $this->addressGuest['user_id'] ?? $this->user->id ?? null,
-            'type' => $this->addressGuest['type'] ?? $this->type,
-            'options' => $this->addressGuest['options'] ?? $options,
-        ];
+        $options[$extraField->field] = "";
+      }
     }
+    $options["extraInfo"] = "";
+    $options["customCity"] = false;
+
+    //Validation User Logged | Get Basi Information
+    if(!is_null($this->user)){
+      //Don't show LastName
+      if($this->hideLastName){
+         $userFirstName = $this->user->present()->fullname;
+         $userLastName = "";
+      }else{
+        //Show lastname
+        $userFirstName = $this->user->first_name;
+        $userLastName = $this->user->last_name;
+      }
+    }
+
+    $this->address = [
+      'first_name' => $this->addressGuest['first_name'] ?? $userFirstName ?? "",
+      'last_name' => $this->addressGuest['last_name'] ?? $userLastName ?? "",
+      'address_1' => $this->addressGuest['address_1'] ?? "",
+      'telephone' => $this->addressGuest['telephone'] ?? "",
+      'country' => $this->addressGuest['country'] ?? "",
+      'country_id' => $this->addressGuest['country_id'] ?? "",
+      'state_id' => $this->addressGuest['state_id'] ?? "",
+      'state' => $this->addressGuest['state'] ?? "",
+      'city' => $this->addressGuest['city'] ?? "",
+      'city_id' => $this->addressGuest['city_id'] ?? "",
+      'zip_code' => $this->addressGuest['zip_code'] ?? "",
+      'default' => $this->addressGuest['default'] ?? false,
+      'user_id' => $this->addressGuest['user_id'] ?? $this->user->id ?? null,
+      'type' => $this->addressGuest['type'] ?? $this->type,
+      'options' => $this->addressGuest['options'] ?? $options
+    ];
+  }
 
     private function initCountries()
     {
@@ -308,15 +345,111 @@ private function validateCity()
         return app('Modules\Iprofile\Repositories\AddressRepository');
     }
 
-    /**
-     * Get the view / contents that represent the component.
-     *
-     * @return \Illuminate\Contracts\View\View|string
-     */
-    public function render()
-    {
-        return view('iprofile::frontend.livewire.address-form', [
-            'addressesExtraFields' => $this->addressesExtraFields,
-        ]);
+  /**
+   *  Listener | Update Marker in Map
+   */
+  public function updateMarkerInMap($params)
+  {
+    //\Log::info($this->log.'selectedMarkerInMap|params: '.json_encode($params));
+
+    //Save new data
+    $this->updateDataFromExternal($params);
+
+    //Emit to update marker in map
+    $this->dispatchBrowserEvent('google-update-marker-in-map',[
+      'itemPosition' => $params['newPosition'],
+      'inputVarName' => $params['inputVarName']
+    ]);
+
+  }
+
+  /**
+   *  Listener | Update address, lng, lat from map
+   */
+  public function updateDataFromExternal($params)
+  {
+
+    //\Log::info($this->log.'updateDataFromExternal|params: '.json_encode($params));
+
+    //Save New Positions
+    $this->address['lat'] = $params['newPosition']['lat'];
+    $this->address['lng'] = $params['newPosition']['lng'];
+
+    //Save new address in variable
+    //\Log::info($this->log.'updateDataFromExternal|Input Value: '.$params['inputValue']);
+    $this->address[$params['inputVarName']] = $params['inputValue'];
+
+    //Search Required data in Ilocations
+    $requiredData = $this->getDataFromIlocations($params['addressData']);
+
+    //Save Data in variables
+    $this->address["country"] = $requiredData['country']['name'];
+    $this->address['country_id'] = $requiredData['country']['id'] ?? "";
+    $this->address["state"] = $requiredData['province']['name'];
+    $this->address['state_id'] = $requiredData['province']['id'] ?? "";
+    $this->address["city"] = $requiredData['city']['name'];
+    $this->address['city_id'] = $requiredData['city']['id'] ?? "";
+
+  }
+
+  /*
+  * Get data from Ilocations to Country,Province and City
+  */
+  public function getDataFromIlocations($addresData)
+  {
+
+    //\Log::info($this->log.'updateDataFromExternal|params: '.json_encode($addresData);
+    $country = [];
+    $province = [];
+    $city = [];
+
+    //Search Country
+    $searchParams['filter']['field'] = "iso_2";
+    $searchParams['include'] = [];
+    $criteria = $addresData['country'];
+
+    $country = $this->countryRepository()->getItem($criteria,json_decode(json_encode($searchParams)));
+    if(!is_null($country)){
+      $country = ['id' => $country->id,'name' => $country->name];
+    }else{
+      $country = ['name' => $addresData['country']];
     }
+
+    //Search Province
+    $searchParams['filter']['search'] = $addresData['state'];
+    $provinces = $this->provinceRepository()->getItemsBy(json_decode(json_encode($searchParams)));
+    if(count($provinces)>0){
+      $province = ['id' => $provinces[0]->id,'name' => $provinces[0]->name];
+    }else{
+      $province = ['name' => $addresData['state']];
+    }
+
+    //Search City
+    $searchParams['filter']['search'] = $addresData['city'];
+    $cities = $this->cityRepository()->getItemsBy(json_decode(json_encode($searchParams)));
+    if(count($cities)>0){
+      $city = ['id' => $cities[0]->id,'name' => $cities[0]->name];
+    }else{
+      $city = ['name' => $addresData['city']];
+    }
+
+    //Final Result
+    $result = ['country' => $country, 'province' => $province,'city' => $city];
+
+
+    return $result;
+  }
+
+
+  /**
+   * Get the view / contents that represent the component.
+   *
+   * @return \Illuminate\Contracts\View\View|string
+   */
+  public function render()
+  {
+    return view("iprofile::frontend.livewire.address-form", [
+      "addressesExtraFields" => $this->addressesExtraFields
+    ]);
+  }
 }

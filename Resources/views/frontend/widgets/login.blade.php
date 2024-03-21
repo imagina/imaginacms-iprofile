@@ -47,22 +47,24 @@
           <input name="embedded" type="hidden" value="{{isset($route) && $route ? $route : ''}}">
         @endif
 
-        <div class="row">
-          <div class="col-sm-12 py-2">
-            <div class="form-group has-feedback {{ $errors->has('email') ? ' has-error' : '' }}">
-              <label>{{trans('user::auth.email')}}</label>
-              {{ Form::email('email', old('email'),['required','class' => "form-control",'placeholder' => trans('user::auth.email')]) }}
-              {!! $errors->first('email', '<div class="invalid-feedback">:message</div>') !!}
+        @if(isset($errors))
+          <div class="row">
+            <div class="col-sm-12 py-2">
+              <div class="form-group has-feedback {{ $errors->has('email') ? ' has-error' : '' }}">
+                <label>{{trans('user::auth.email')}}</label>
+                {{ Form::email('email', old('email'),['required','class' => "form-control",'placeholder' => trans('user::auth.email')]) }}
+                {!! $errors->first('email', '<div class="invalid-feedback">:message</div>') !!}
+              </div>
+            </div>
+            <div class="col-sm-12 py-2">
+              <div class="form-group has-feedback {{ $errors->has('password') ? ' has-error' : '' }}">
+                <label>{{trans('user::auth.password')}}</label>
+                {{ Form::password('password',['required','class' => 'form-control','placeholder' => trans('user::auth.password')]) }}
+                {!! $errors->first('password', '<div class="invalid-feedback">:message</div>') !!}
+              </div>
             </div>
           </div>
-          <div class="col-sm-12 py-2">
-            <div class="form-group has-feedback {{ $errors->has('password') ? ' has-error' : '' }}">
-              <label>{{trans('user::auth.password')}}</label>
-              {{ Form::password('password',['required','class' => 'form-control','placeholder' => trans('user::auth.password')]) }}
-              {!! $errors->first('password', '<div class="invalid-feedback">:message</div>') !!}
-            </div>
-          </div>
-        </div>
+        @endif
         <x-isite::captcha formId="loginForm" />
         <div class=" form-button text-center  border-bottom  border-bottom-dotted py-4 mb-4">
           @php

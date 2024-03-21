@@ -5,9 +5,9 @@
             $userData = $user['data'];
         @endphp
         <div  class="account-menu dropdown d-inline-block" id="accMenuDrop">
-            <button class="btn dropdown-toggle" type="button"
+            <button class="btn dropdown-toggle {{$classUser}}" type="button" role="button"
                     id="dropdownProfile" data-toggle="dropdown" aria-haspopup="true"
-                    aria-expanded="false">
+                    aria-expanded="false" aria-label="dropdown profile">
 
 
                 @if($showLabel)
@@ -23,7 +23,7 @@
                     <i class="fa fa-user" aria-hidden="true"></i>
                 @endif
             </button>
-            <div id="drop-menu" class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownUser">
+            <div id="drop-menu" class="dropdown-menu dropdown-menu-right" >
                 <div class="dropdown-item text-center py-3 ">
                     <!-- Nombre -->
                     @if($userData->mainImage)
@@ -60,10 +60,10 @@
 
         </div>
     @else
-        <div class="account-menu dropdown d-inline-block" id="accMenuDrop">
-            <button class="btn  dropdown-toggle" type="button"
+        <div class="account-menu dropdown d-inline-block " id="accMenuDrop">
+            <button class="btn dropdown-toggle {{$classUser}}" type="button" role="button"
                     id="dropdownProfile" data-toggle="dropdown" aria-haspopup="true"
-                    aria-expanded="false">
+                    aria-expanded="false" aria-label="dropdown profile">
                 <div class="user d-inline-block">
                     @if($showLabel)
                         <span class="d-none d-lg-inline-block"> {{ $label }}</span>
@@ -129,6 +129,13 @@
 
 
     @section('scripts')
+        <style>
+        @if(!empty($styleUser))
+        #{{ $id }} #accMenuDrop > button {
+        {!!$styleUser!!}
+        }
+        @endif
+        </style>
         <script type="text/javascript">
           $("#accMenuDrop").hover(function(){
             $(this).addClass("show");

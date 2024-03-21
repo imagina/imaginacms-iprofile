@@ -66,14 +66,20 @@ Route::prefix('/auth')->group(function (Router $router) {
         'middleware' => ['auth:api'],
     ]);
 
-    //==================================================== Social
-    $router->post('social/{provider}', [
-        'as' => $locale.'api.iprofile.social.auth',
-        'uses' => 'AuthApiController@getSocialAuth',
-    ]);
+  #==================================================== Social
+  $router->post('social/{criteria}', [
+    'as' => $locale . 'api.iprofile.social.auth',
+    'uses' => 'AuthApiController@getSocialAuth'
+  ]);
 
-    $router->get('social/callback/{provider}', [
-        'as' => $locale.'api.iprofile.social.callback',
-        'uses' => 'AuthApiController@getSocialAuthCallback',
-    ]);
+  $router->get('social/callback/{criteria}', [
+    'as' =>  $locale . 'api.iprofile.social.callback',
+    'uses' => 'AuthApiController@getSocialAuthCallback'
+  ]);
+
+  $router->post('access-with-email', [
+    'as' => $locale . 'api.iprofile.access-with-email',
+    'uses' => 'AuthApiController@accessWithEmail',
+  ]);
+
 });

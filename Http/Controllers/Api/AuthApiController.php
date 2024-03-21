@@ -3,28 +3,39 @@
 namespace Modules\Iprofile\Http\Controllers\Api;
 
 use Exception;
+use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Hash;
 use Lcobucci\JWT\Parser;
+use Modules\Core\Http\Controllers\BasePublicController;
 use Modules\Ihelpers\Http\Controllers\Api\BaseApiController;
-use Modules\Iprofile\Entities\ProviderAccount;
+use Modules\User\Entities\Sentinel\User;
 use Modules\Iprofile\Events\ImpersonateEvent;
 use Modules\Iprofile\Repositories\UserApiRepository;
-use Modules\User\Contracts\Authentication;
-use Modules\User\Entities\Sentinel\User;
 use Modules\User\Exceptions\InvalidOrExpiredResetCode;
 use Modules\User\Exceptions\UserNotFoundException;
+use Modules\User\Http\Requests\ResetCompleteRequest;
+use Modules\User\Http\Requests\ResetRequest;
+use Modules\User\Services\UserResetter;
+use Socialite;
+use Modules\User\Contracts\Authentication;
+
 // Reset
 
 // Socialite
-use Modules\User\Http\Requests\ResetCompleteRequest;
+use Laravel\Socialite\Contracts\User as ProviderUser;
+use Modules\Iprofile\Entities\ProviderAccount;
+use Modules\User\Repositories\RoleRepository;
+use Modules\User\Repositories\UserRepository;
+use Modules\Iprofile\Http\Controllers\Api\FieldApiController;
+
 //Controllers
 
-use Modules\User\Services\UserResetter;
-use Socialite;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Validator;
 
 class AuthApiController extends BaseApiController
 {
@@ -42,15 +53,16 @@ class AuthApiController extends BaseApiController
 
     protected $auth;
 
-    public function __construct(UserApiController $userApiController, FieldApiController $fieldApiController, UserApiRepository $user)
-    {
-        parent::__construct();
-        $this->userApiController = $userApiController;
-        $this->fieldApiController = $fieldApiController;
-        $this->user = $user;
-        $this->auth = app(Authentication::class);
-        $this->clearTokens(); //CLear tokens
-    }
+  public function __construct(UserApiController $userApiController, FieldApiController $fieldApiController, UserApiRepository $user, UserRepository $userRepository)
+  {
+    parent::__construct();
+    $this->userRepository = $userRepository;
+    $this->userApiController = $userApiController;
+    $this->fieldApiController = $fieldApiController;
+    $this->user = $user;
+    $this->auth = app(Authentication::class);
+    $this->clearTokens();//CLear tokens
+  }
 
     /**
      * Login Api Controller
@@ -383,42 +395,47 @@ class AuthApiController extends BaseApiController
 
             $user = $this->_createOrGetUser($criteria, $data);
 
-            //Request to Repository
-            if (isset($user->id)) {
-                //Find user with relationships
-                $userData = $this->user->getItem($user->id, (object) (['include' => ['fields', 'departments', 'addresses', 'settings', 'roles']]));
+      //Request to Repository
+      if (isset($user->id)) {
+        $auth = \Sentinel::login($user);
+        $token = $this->getToken($auth);//Get token
+        $userData = $this->validateResponseApi($this->me());
 
-                $auth = \Sentinel::login($user);
-                $token = $this->getToken($auth); //Get token
+        $response = ["data" => [
+          'userToken' => 'Bearer ' . $token->accessToken,
+          'expiresIn' => $token->token->expires_at,
+          'userData' => $userData->userData
+        ]];//Response
+      } else {
+        throw new \Exception('User not found', 404);
+      }
 
-                $response = ['data' => [
-                    'userToken' => 'Bearer '.$token->accessToken,
-                    'expiresIn' => $token->token->expires_at,
-                    'userData' => $userData,
-                ]]; //Response
-            } else {
-                throw new \Exception('User not found', 404);
-            }
-        } catch (\Exception $e) {
-            $status = $this->getStatusError($e->getCode());
-            $response = ['errors' => $e->getMessage()];
-        }
+    } catch (\Exception $e) {
+      $status = $this->getStatusError($e->getCode());
+      $response = ["errors" => $e->getMessage()];
+    }
 
         //Return response
         return response()->json($response, $status ?? 200);
     }
 
-    /**
-     * GET SOCIAL
-     */
-    public function _createOrGetUser($criteria, $data)
-    {
-        if ($criteria == 'facebook') {
-            $fields = ['first_name', 'last_name', 'picture.width(1920).redirect(false)', 'email', 'gender', 'birthday', 'address', 'about', 'link'];
-            $providerUser = Socialite::driver($criteria)->stateless()->fields($fields)->userFromToken($data['token']);
-        } else {
-            $providerUser = Socialite::driver($criteria)->stateless()->userFromToken($data['token']);
-        }
+
+  /**
+   * GET SOCIAL
+   *
+   * @param
+   * @return
+   */
+  function _createOrGetUser($criteria, $data)
+  {
+
+    if ($criteria == "facebook") {
+      $fields = ['first_name', 'last_name', 'picture.width(1920).redirect(false)', 'email', 'gender', 'birthday', 'address', 'about', 'link'];
+      $providerUser = Socialite::driver($criteria)->stateless()->fields($fields)->userFromToken($data["token"]);
+    } else if ($criteria == "google") {
+      $providerUser = Socialite::driver("google-jwt")->stateless()->userFromToken($data["token"]);
+    } else
+      $providerUser = Socialite::driver($criteria)->stateless()->userFromToken($data["token"]);
 
         $providerAccount = app('Modules\Iprofile\Entities\ProviderAccount');
         $provideraccount = $providerAccount->whereProvider($criteria)->whereProviderUserId($providerUser->getId())
@@ -513,15 +530,19 @@ class AuthApiController extends BaseApiController
                             break;
                     }
 
-                    $b64image = 'data:image/jpg;base64,'.base64_encode(file_get_contents($social_picture));
-                    $field['user_id'] = $user->id; // Add user Id
-                    $field['value'] = $b64image;
-                    $field['name'] = 'mainImage';
-                    $this->validateResponseApi($this->field->create(new Request(['attributes' => (array) $field])));
-                }
-            } else {
-                return null;
-            }
+
+          $b64image = 'data:image/jpg;base64,' . base64_encode(file_get_contents($social_picture));
+          $field['user_id'] = $user->id;// Add user Id
+          $field['value'] = $b64image;
+          $field['name'] = 'mainImage';
+          $this->validateResponseApi($this->fieldApiController->create(new Request(['attributes' => (array)$field])));
+
+        }
+
+
+      } else {
+        return null;
+      }
 
             return $user;
         }
@@ -595,12 +616,76 @@ class AuthApiController extends BaseApiController
           ->delete();
     }
 
-    private function getToken($user)
-    {
-        if (isset($user)) {
-            return $user->createToken('Laravel Password Grant Client');
-        } else {
-            return false;
-        }
+
+  /**
+   * @param $user
+   * @return bool
+   */
+  private function getToken($user)
+  {
+    if (isset($user))
+      return $user->createToken('Laravel Password Grant Client');
+    else return false;
+  }
+
+  /**
+   * Access With Email Api Controller
+   * @param Request $request
+   * @return mixed
+   */
+  public function accessWithEmail(Request $request)
+  {
+    \DB::beginTransaction();
+    try {
+      $data = $request->input('attributes') ?? [];
+
+      $validator = Validator::make($data,[
+        'email' => 'required|email'
+      ]);
+
+      if ($validator->fails()) {
+        throw new Exception("Incorrect email", 400);
+      }
+
+      $user = User::where('email', $data["email"])->first();
+
+      //Verify if exist user
+      if(!$user) {
+        $userData = [
+          "email" => $data["email"],
+          "password" => generatePassword()
+        ];
+
+        //Create user with email and possword
+        $user = $this->userRepository->createWithRoles($userData, [2], true);
+      }
+
+      //Generate token, to use 1 time
+      $userToken =  $user->generateToken(1, 1);
+      $url = route('auth.validate.email-token', ['token' => $userToken->token, 'redirectTo' => $data["redirectTo"]]);
+
+      //Import notification
+      $notification = app("Modules\Notification\Services\Inotification");
+      $notification->provider('email')
+          ->to($data["email"])
+          ->push([
+            "title" => trans("iprofile::frontend.email.readyToProceed"),
+            "message" => trans("iprofile::frontend.email.clickLogin"),
+            "buttonText" => trans("iprofile::frontend.email.proceedToLogin"),
+            "withButton" => true,
+            "link" => $url,
+            "extraMessage" => trans("iprofile::frontend.email.loginLink", ['link' => $url]),
+            "view" => "iprofile::emails.layouts.access-email"
+          ]);
+
+      \DB::commit();//Commit to DataBase
+    } catch (Exception $e) {
+      \DB::rollback();//Rollback to Data Base
+      $status = $this->getStatusError($e->getCode());
+      $response = ["errors" => $e->getMessage()];
     }
+
+    //Return response
+    return response()->json($response ?? ["data" => "Request successful"], $status ?? 200);
+  }
 }

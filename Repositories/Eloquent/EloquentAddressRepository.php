@@ -57,15 +57,14 @@ class EloquentAddressRepository extends EloquentBaseRepository implements Addres
             $query->select($params->fields);
         }
 
-        /*== REQUEST ==*/
-        if (isset($params->page) && $params->page) {
-            return $query->paginate($params->take);
-        } else {
-            $params->take ? $query->take($params->take) : false; //Take
-
-            return $query->get();
-        }
+    /*== REQUEST ==*/
+    if (isset($params->page) && $params->page) {
+      return $query->paginate($params->take);
+    } else {
+      isset($params->take) && $params->take ? $query->take($params->take) : false;//Take
+      return $query->get();
     }
+  }
 
     public function getItem($criteria, $params = false)
     {
