@@ -60,11 +60,11 @@ class VcardController extends AdminBaseController
     $vcard->addEmail($user->settings->where("name", "jobEmail")->first()->value ?? $user->email);
     $vcard->addPhoneNumber($user->settings->where("name", "jobMobile")->first()->value ?? "", 'PREF;WORK');
     
-    $defaultImage = 'modules/iprofile/img/default.jpg';
-    $mainImage = !$user->fields->isEmpty() ? $user->fields->where('name', 'mainImage')->first() : null;
-    
+     $defaultImage = 'modules/iprofile/img/default.jpg';
+    $mainImage = $user->mediaFiles()->profile ?? $defaultImage;
+
     if (!is_null($mainImage)) {
-      $contents = Storage::disk("publicmedia")->path($mainImage->value->getRelativeUrl());
+      $contents = Storage::disk("publicmedia")->path($mainImage->relativePath);
       $vcard->addPhoto($contents);
     } else {
       $contents = Storage::disk("publicmedia")->path($defaultImage);

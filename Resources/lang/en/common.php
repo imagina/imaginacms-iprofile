@@ -32,5 +32,9 @@ return [
     ]
   ],
 
+  'layouts' => [
+    'group_name' => 'User Profile Templates',
+    'label_views' => 'Views Profile Users'
+  ]
 
 ];

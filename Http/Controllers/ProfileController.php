@@ -143,6 +143,25 @@ class ProfileController extends AdminBaseController
     }
     
   }
-  
-  
+
+  public function show($userID)
+  {
+    $user = $this->userApi->getItem($userID);
+
+    $jobData = [
+      'jobTitle' => $user->settings->where("name", "jobTitle")->first()->value ?? "",
+      'jobRole' => $user->settings->where("name", "jobRole")->first()->value ?? "",
+      'jobEmail' => $user->settings->where("name", "jobEmail")->first()->value ?? $user->email,
+      'jobMobile' => $user->settings->where("name", "jobMobile")->first()->value ?? "",
+      'jobLinks' => $user->settings->where("name", "jobLinks")->first()->value ?? [],
+    ];
+
+    $defaultImage = 'modules/iprofile/img/default.jpg';
+    $mainImage = $user->mediaFiles()->profile->path ?? $defaultImage;
+
+
+    $tpl = setting('iprofile::layoutProfileShow');
+
+    return view($tpl, compact('user', 'jobData', 'mainImage', 'defaultImage'));
+  }
 }

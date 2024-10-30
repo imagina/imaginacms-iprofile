@@ -38,6 +38,7 @@ class UserTransformer extends JsonResource
       'lastLoginDate' => $this->when($this->last_login, $this->last_login),
       'userName' => $this->when($this->user_name, $this->user_name),
       'phone' => $this->when($this->phone, $this->phone),
+      'url' => url('/account/profile/'.$this->id),
 
       'smallImage' => isset($mainImage->value) ?
         str_replace('.jpg', '_smallThumb.jpg?' . now(), $mainImage->value) : $defaultImage,

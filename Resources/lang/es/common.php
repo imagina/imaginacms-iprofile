@@ -49,4 +49,10 @@ return [
     'labelJobEmail' => 'Correo Electronico Corporativo',
     'labelJobMobile' => 'Telefono Corporativo',
   ],
+
+  'layouts' => [
+    'group_name' => 'Plantillas Perfil Usuario',
+    'label_views' => 'Vistas Perfil Usuarios',
+    'label_vcard_download' => 'Descargar contacto'
+  ]
 ];
