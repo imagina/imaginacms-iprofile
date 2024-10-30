@@ -53,14 +53,13 @@
                                         </div>
                                     </div>
                                 @endforeach
-
-
                             </div>
-                            <div class="row justify-content-center">
-
-                                    <x-isite::social/>
-
-
+                            <div class="row justify-content-center mt-4">
+                                    <x-isite::social iconStyle="1"
+                                                     iconBorderRadius="6"
+                                                     iconMargin="0 4px"
+                                                     iconSize="18px"
+                                                     iconDisplay="inline-flex"/>
                             </div>
                         </div>
 
@@ -152,6 +151,7 @@
             }
 
             .profile-layout-1 .card-profile img {
+                background-color: #cccccc;
                 left: 50%;
                 bottom: -90px;
                 width: 150px !important;
@@ -177,6 +177,7 @@
             padding: 15px;
             background: #ffffff;
             box-shadow: 10px 10px 20px 0 #E5E5E5;
+            border-left: 3px solid #e7e7e7;
             margin-bottom: 20px;
             color: #000000;
             font-size: 14px;
@@ -187,6 +188,7 @@
                 font-size: 45px;
                 padding-right: 15px;
                 padding-left: 10px;
+                color: var(--dark);
             }
         }
 
