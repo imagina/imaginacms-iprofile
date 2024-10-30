@@ -8,6 +8,7 @@ use Modules\Ihelpers\Http\Controllers\Api\SettingsApiController;
 use Modules\Isite\Transformers\OrganizationTransformer;
 use Modules\Ihelpers\Transformers\BaseApiTransformer;
 use Cartalyst\Sentinel\Activations\EloquentActivation as Activation;
+use Modules\Iqreable\Transformers\QrTransformer;
 
 class UserTransformer extends JsonResource
 {
@@ -39,6 +40,7 @@ class UserTransformer extends JsonResource
       'userName' => $this->when($this->user_name, $this->user_name),
       'phone' => $this->when($this->phone, $this->phone),
       'url' => url('/account/profile/'.$this->id),
+      'qrs' => QrTransformer::collection($this->whenLoaded('qrs')),
 
       'smallImage' => isset($mainImage->value) ?
         str_replace('.jpg', '_smallThumb.jpg?' . now(), $mainImage->value) : $defaultImage,
