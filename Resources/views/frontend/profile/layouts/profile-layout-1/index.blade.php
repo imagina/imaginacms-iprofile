@@ -22,12 +22,10 @@
                                     </div>
                                     <div class="col-12 col-md-auto">
                                         <div class="profile-data">
-                                            <i class="fa-solid fa-phone"></i>
-                                            {{$jobData['jobMobile']}}
+                                            <x-isite::contact.phones :phones="[$jobData['jobMobile']]" :showIcon="true" />
                                         </div>
                                         <div class="profile-data">
-                                            <i class="fa-solid fa-envelope"></i>
-                                            {{$jobData['jobEmail']}}
+                                            <x-isite::contact.emails :emails="[$jobData['jobEmail']]" :showIcon="true" />
                                         </div>
                                     </div>
                                 </div>
