@@ -16,7 +16,7 @@
                             <div class="container">
                                 <div class="row justify-content-center justify-content-md-between text-center text-md-left">
                                     <div class="col-12 col-md-auto">
-                                        <div class="profile-name">{{$user->fist_name. ' ' .$user->last_name}}</div>
+                                        <div class="profile-name">{{$user->first_name. ' ' .$user->last_name}}</div>
                                         <div class="profile-text">{{$jobData['jobTitle']}}</div>
                                         <div class="profile-text">{{$jobData['jobRole']}}</div>
                                     </div>
