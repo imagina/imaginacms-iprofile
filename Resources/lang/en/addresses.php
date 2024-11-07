@@ -66,7 +66,7 @@ return [
       "min" => "3 digits minimum",
     ],
     "address_1" => [
-      "min" => "3 digits minimum",
+      "min" => "10 digits minimum",
     ],
     "telephone" => [
       "min" => "5 digits minimum",

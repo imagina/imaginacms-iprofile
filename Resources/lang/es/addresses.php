@@ -72,7 +72,7 @@ return [
       "min" => "Mínimo 3 dígitos permitidos",
     ],
     "address_1" => [
-      "min" => "Mínimo 3 dígitos permitidos",
+      "min" => "Mínimo 10 dígitos permitidos",
     ],
     "telephone" => [
       "min" => "Mínimo 6 dígitos permitidos",
