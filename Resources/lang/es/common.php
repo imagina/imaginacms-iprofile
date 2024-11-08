@@ -53,6 +53,6 @@ return [
   'layouts' => [
     'group_name' => 'Plantillas Perfil Usuario',
     'label_views' => 'Vistas Perfil Usuarios',
-    'label_vcard_download' => 'Guardar Mi Contacto'
+    'label_vcard_download' => 'Guardar mi Contacto'
   ]
 ];

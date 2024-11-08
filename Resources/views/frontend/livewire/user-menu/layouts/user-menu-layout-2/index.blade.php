@@ -82,7 +82,7 @@
     @section('scripts')
       @if(!empty($styleUser))
       <style>
-        #{{$id}} .list-sidebar {
+        #{{$ident}} .list-sidebar {
           {!!$styleUser!!}
         }
       </style>
