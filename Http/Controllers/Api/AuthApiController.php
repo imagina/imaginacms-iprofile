@@ -252,6 +252,9 @@ class AuthApiController extends BaseApiController
 
       }
 
+      //Not clear cache
+      app()->instance('clearResponseCache', false);
+
       // Re-sync session with website
       $this->auth->logUserIn($user);
 
