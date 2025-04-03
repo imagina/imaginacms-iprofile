@@ -12,7 +12,7 @@ class OptionalAuth
   public function handle($request, Closure $next, ...$guards)
   {
     //Add optional guard API
-    \Auth::shouldUse('api');
+    if (!$request->is('api/profile/v1/auth/login')) \Auth::shouldUse('api');
 
     //Response
     return $next($request);
