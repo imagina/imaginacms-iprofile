@@ -11,4 +11,8 @@ class RoleTranslation extends Model
     protected $fillable = [
         'title'
     ];
+
+    public function setTitleAttribute($value){
+      $this->title = 'RoleTitle';
+    }
 }
