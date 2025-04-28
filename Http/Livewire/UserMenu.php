@@ -24,15 +24,15 @@ class UserMenu extends Component
   public $classUser;
   public $styleUser;
 
-  
+
   public function mount($layout = 'user-menu-layout-1', $showLabel = false, $ident = "userMenuComponent",
-                              $params = [], $openLoginInModal = true, $openRegisterInModal = false,
+                              $params = [], $openLoginInModal = false, $openRegisterInModal = false,
                               $onlyShowInTheDropdownHeader = true, $onlyShowInTheMenuOfTheIndexProfilePage = false,
                               $label = null, $classUser = '', $styleUser = '')
   {
-    
+
     $this->view = 'iprofile::frontend.livewire.user-menu.layouts.' . (isset($layout) ? $layout : 'user-menu-layout-1') . '.index';
-    
+
     $this->showLabel = $showLabel;
     $this->label = $label ?? trans('iprofile::frontend.button.my_account');
     $this->openLoginInModal = $openLoginInModal;
@@ -44,32 +44,32 @@ class UserMenu extends Component
     $this->onlyShowInTheDropdownHeader = $onlyShowInTheDropdownHeader;
     $this->onlyShowInTheMenuOfTheIndexProfilePage = $onlyShowInTheMenuOfTheIndexProfilePage;
     $this->ident = $ident ?? "userMenuComponent";
-  
+
   }
-  
+
   public function reload($currentUrl){
-  
-   
+
+
     $modules = app('modules')->allEnabled();
-  
+
     $this->moduleLinks = [];
     $this->moduleLinksWithoutSession = [];
     $locale = locale();
     $this->panel = config("asgard.iprofile.config.panel");
-  
+
     if ($this->panel == "quasar") {
       $this->profileRoute = "/ipanel/#/me/profile/";
     } else {
       $this->profileRoute = \URL::route($locale . '.iprofile.account.index');
     }
-  
+
     foreach ($modules as $name => $module) {
       $moduleLinksCfg = config('asgard.' . strtolower($name) . '.config.userMenuLinks');
 
       if (!empty($moduleLinksCfg)) {
-        
+
         foreach ($moduleLinksCfg as &$moduleLink) {
-        
+
           //Check if show or not de Link
           if (isset($moduleLink['activeBySettingName'])) {
             $checkSetting = setting($moduleLink['activeBySettingName']);
@@ -77,13 +77,13 @@ class UserMenu extends Component
               break;
             }
           }
-       
+
           if (
             ($this->onlyShowInTheDropdownHeader && !isset($moduleLink["onlyShowInTheMenuOfTheIndexProfilePage"]))
             ||
             ($this->onlyShowInTheMenuOfTheIndexProfilePage && !isset($moduleLink["onlyShowInTheDropdownHeader"]))
           ) {
-            
+
             if ($this->panel == "quasar" && isset($moduleLink['quasarUrl'])) {
               $moduleLink['url'] = $moduleLink['quasarUrl'] . "?redirectTo=" . $currentUrl["href"];
             } else
@@ -95,27 +95,27 @@ class UserMenu extends Component
                   $moduleLink['url'] = \URL::route($moduleLink['routeName']);
                 else
                   $moduleLink['url'] = \URL::to('/');
-              
+
               }
-           
+
             if (isset($moduleLink["showInMenuWithoutSession"]) && $moduleLink["showInMenuWithoutSession"])
               $this->moduleLinksWithoutSession[] = $moduleLink;
             else
               $this->moduleLinks[] = $moduleLink;
-          
+
           }
-        
+
         }
       }
     }
-  
-    
+
+
 
   }
-  
+
   private function makeParamsFunction()
   {
-    
+
     return [
       "include" => $this->params["include"] ?? [],
       "take" => $this->params["take"] ?? 12,
@@ -124,7 +124,7 @@ class UserMenu extends Component
       "order" => $this->params["order"] ?? null,
     ];
   }
-  
+
   public function logout()
   {
     $authProfileController = app("Modules\Iprofile\Http\Controllers\AuthProfileController");
@@ -140,7 +140,7 @@ class UserMenu extends Component
       $user = json_decode($user->getContent());
       $userData['data'] = $user->data->userData;
     }
-    
+
     return view($this->view, ["user" => $userData]);
   }
 }
