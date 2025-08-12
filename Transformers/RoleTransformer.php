@@ -18,10 +18,12 @@ class RoleTransformer extends CrudResource
     $roleRepository = app("Modules\Iprofile\Repositories\RoleApiRepository");
     $role = $roleRepository->getItem($this->id);
     //Get settings
-    $settings = $role->settings()->get();
-    $settings = json_decode(json_encode(SettingTransformer::collection($settings)));
     $settingsResponse = [];
-    foreach ($settings as $setting) $settingsResponse[$setting->name] = $setting->value;
+    if($role) {
+      $settings = $role->settings()->get();
+      $settings = json_decode(json_encode(SettingTransformer::collection($settings)));
+      foreach ($settings as $setting) $settingsResponse[$setting->name] = $setting->value;
+    }
 
     // esta sección de código se agregó porque el formeable empezó a dar problemas cuando se implementó el tenant
     // la idea es que los formularios pertenezcan a un tenant también pero en el caso del formulario que pertenece al

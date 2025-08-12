@@ -103,7 +103,7 @@ return [
     [
       "title" => "iprofile::frontend.button.sign_in",
       "routeName" => "account.login.get",
-      "quasarUrl" => '/ipanel/#/auth/login/',
+      "quasarUrl" => env('APP_URL').'/ipanel/#/auth/login/',
       "icon" => "fa fa-user mr-2",
       "showInMenuWithoutSession" => true,
       //'dispatchModal' => "#userLoginModal"
@@ -111,7 +111,7 @@ return [
     [
       "title" => "iprofile::frontend.button.register",
       "routeName" => "account.register",
-      "quasarUrl" => '/ipanel/#/auth/register/',
+      "quasarUrl" => env('APP_URL').'/ipanel/#/auth/register/',
       "icon" => "fas fa-sign-out-alt mr-2",
       "showInMenuWithoutSession" => true,
       //'dispatchModal' => "#userRegisterModal"
